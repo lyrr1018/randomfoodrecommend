@@ -1,0 +1,404 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘 뭐 먹지?</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      background: #fff8ef;
+      color: #493322;
+    }
+
+    header {
+      text-align: center;
+      padding: 45px 20px 25px;
+    }
+
+    header .icon {
+      font-size: 48px;
+    }
+
+    h1 {
+      margin: 12px 0;
+      font-size: 36px;
+    }
+
+    header p {
+      color: #897665;
+    }
+
+    main {
+      width: min(90%, 650px);
+      margin: 0 auto 50px;
+    }
+
+    .panel {
+      background: white;
+      padding: 25px;
+      border-radius: 22px;
+      box-shadow: 0 5px 20px #704b2110;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-top: 0;
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .keyword {
+      border: 1px solid #ead8c7;
+      background: white;
+      color: #604b39;
+      padding: 11px 15px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .keyword:hover {
+      background: #fff0df;
+    }
+
+    .keyword.active {
+      background: #c96f43;
+      color: white;
+      border-color: #c96f43;
+    }
+
+    .recommend-btn {
+      display: block;
+      width: 100%;
+      margin-top: 25px;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: #c96f43;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .recommend-btn:hover {
+      background: #ad5932;
+    }
+
+    #result {
+      display: none;
+      text-align: center;
+    }
+
+    #foodEmoji {
+      font-size: 70px;
+      margin: 10px;
+    }
+
+    #foodName {
+      font-size: 30px;
+      margin: 10px;
+    }
+
+    #foodDescription {
+      color: #897665;
+      line-height: 1.7;
+    }
+
+    #foodTags {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 15px;
+    }
+
+    #foodTags span {
+      background: #fff0df;
+      color: #9a5735;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .message {
+      color: #b94c35;
+      margin-top: 15px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #a18d7b;
+      font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 29px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="icon">🍽️</div>
+    <h1>오늘 뭐 먹지?</h1>
+    <p>고민은 그만, 메뉴는 랜덤!</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>어떤 음식이 먹고 싶나요?</h2>
+      <p>원하는 조건을 선택해 주세요.</p>
+
+      <div class="keywords" id="keywords">
+        <button class="keyword" data-tag="매운 음식">🌶️ 매운 음식</button>
+        <button class="keyword" data-tag="저렴한 음식">💸 저렴한 음식</button>
+        <button class="keyword" data-tag="한식">🍚 한식</button>
+        <button class="keyword" data-tag="일식">🍣 일식</button>
+        <button class="keyword" data-tag="중식">🥡 중식</button>
+        <button class="keyword" data-tag="면 요리">🍜 면 요리</button>
+        <button class="keyword" data-tag="고기 요리">🥩 고기 요리</button>
+        <button class="keyword" data-tag="가벼운 음식">🥗 가벼운 음식</button>
+        <button class="keyword" data-tag="혼밥">👤 혼밥</button>
+        <button class="keyword" data-tag="든든한 음식">🍱 든든한 음식</button>
+        <button class="keyword" data-tag="친구와 함께">👯 친구와 함께</button>
+      </div>
+
+      <button class="recommend-btn" id="recommendBtn">
+        🎲 랜덤 메뉴 추천받기
+      </button>
+
+      <p id="message" class="message" role="status"></p>
+    </section>
+
+    <section class="panel" id="result" aria-live="polite">
+      <p>✨ 오늘의 추천 메뉴 ✨</p>
+      <div id="foodEmoji"></div>
+      <h2 id="foodName"></h2>
+      <p id="foodDescription"></p>
+      <div id="foodTags"></div>
+      <button class="recommend-btn" id="againBtn">
+        🔄 다른 음식 추천받기
+      </button>
+    </section>
+  </main>
+
+  <footer>
+    오늘의 메뉴 고민을 해결해 드립니다.
+  </footer>
+
+  <script>
+    // 음식 데이터
+    const foods = [
+      {
+        name: "떡볶이",
+        emoji: "🍢",
+        description: "매콤달콤한 국민 간식!",
+        tags: ["매운 음식", "저렴한 음식", "한식", "혼밥"]
+      },
+      {
+        name: "김치볶음밥",
+        emoji: "🍳",
+        description: "간단하면서도 든든한 한 끼!",
+        tags: ["매운 음식", "저렴한 음식", "한식", "혼밥"]
+      },
+      {
+        name: "라면",
+        emoji: "🍜",
+        description: "빠르고 간편하게 즐기는 메뉴!",
+        tags: ["매운 음식", "저렴한 음식", "면 요리", "혼밥"]
+      },
+      {
+        name: "비빔밥",
+        emoji: "🍚",
+        description: "다양한 재료를 한 그릇에!",
+        tags: ["한식", "든든한 음식"]
+      },
+      {
+        name: "잔치국수",
+        emoji: "🍜",
+        description: "따뜻하고 담백한 국수 한 그릇!",
+        tags: ["저렴한 음식", "한식", "면 요리", "가벼운 음식"]
+      },
+      {
+        name: "돈가스",
+        emoji: "🍛",
+        description: "바삭한 튀김과 든든한 식사!",
+        tags: ["저렴한 음식", "든든한 음식", "혼밥", "고기 요리"]
+      },
+      {
+        name: "파스타",
+        emoji: "🍝",
+        description: "기분 전환하기 좋은 양식 메뉴!",
+        tags: ["면 요리", "든든한 음식", "친구와 함께"]
+      },
+      {
+        name: "샐러드",
+        emoji: "🥗",
+        description: "산뜻하고 가볍게 먹고 싶을 때!",
+        tags: ["가벼운 음식", "혼밥"]
+      },
+      {
+        name: "삼겹살",
+        emoji: "🥩",
+        description: "친구들과 함께 즐기는 인기 메뉴!",
+        tags: ["한식", "든든한 음식", "친구와 함께", "고기 요리"]
+      },
+      {
+        name: "치킨",
+        emoji: "🍗",
+        description: "언제 먹어도 즐거운 메뉴!",
+        tags: ["매운 음식", "든든한 음식", "친구와 함께", "고기 요리"]
+      },
+      {
+        name: "김밥",
+        emoji: "🍙",
+        description: "간편하게 즐기는 한 끼 식사!",
+        tags: ["저렴한 음식", "한식", "가벼운 음식", "혼밥"]
+      },
+      {
+        name: "쌀국수",
+        emoji: "🍲",
+        description: "향긋하고 따뜻한 국물 요리!",
+        tags: ["면 요리", "가벼운 음식", "든든한 음식"]
+      },
+      {
+        name: "마라샹궈",
+        emoji: "🌶️",
+        description: "매콤한 마라 소스로 볶아낸 요리!",
+        tags: ["매운 음식", "든든한 음식", "친구와 함께", "고기 요리"]
+      },
+      {
+      name: "짜장면",
+      emoji: "🍜",
+      description: "달콤한 춘장 소스의 대표 중식!",
+      tags: ["면 요리", "저렴한 음식", "든든한 음식", "중식"]
+     },
+     {
+      name: "짬뽕",
+      emoji: "🍜",
+      description: "해산물과 얼큰한 국물이 어우러진 요리!",
+      tags: ["매운 음식", "면 요리", "든든한 음식", "중식"]
+    },
+    {
+     name: "동파육",
+     emoji: "🥩",
+     description: "통삼겹살을 삶고 굽고 튀기고 조려 만든 부드러운 고기 요리!",
+     tags: ["고기 요리", "중식", "든든한 음식", "친구와 함께"]
+    },
+    ];
+
+    const selectedTags = new Set();
+    let lastFood = null;
+
+    const keywordButtons =
+      document.querySelectorAll(".keyword");
+
+    const result = document.getElementById("result");
+    const message = document.getElementById("message");
+
+    // 키워드 선택 및 해제
+    keywordButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const tag = button.dataset.tag;
+
+        if (selectedTags.has(tag)) {
+          selectedTags.delete(tag);
+          button.classList.remove("active");
+        } else {
+          selectedTags.add(tag);
+          button.classList.add("active");
+        }
+
+        message.textContent = "";
+      });
+    });
+
+    // 랜덤 음식 추천
+    function recommendFood() {
+      const tags = [...selectedTags];
+
+      // 선택한 모든 키워드와 일치하는 음식 찾기
+      let matchedFoods = foods.filter(food =>
+        tags.every(tag => food.tags.includes(tag))
+      );
+
+      if (matchedFoods.length === 0) {
+        result.style.display = "none";
+        message.textContent =
+          "조건에 맞는 음식이 없어요. 키워드를 줄여 보세요!";
+        return;
+      }
+
+      // 음식이 여러 개면 직전 결과를 피하기
+      const otherFoods = matchedFoods.filter(
+        food => food.name !== lastFood
+      );
+
+      if (otherFoods.length > 0) {
+        matchedFoods = otherFoods;
+      }
+
+      // 무작위 선택
+      const food = matchedFoods[
+        Math.floor(Math.random() * matchedFoods.length)
+      ];
+
+      lastFood = food.name;
+
+      // 결과 표시
+      document.getElementById("foodEmoji").textContent =
+        food.emoji;
+
+      document.getElementById("foodName").textContent =
+        food.name;
+
+      document.getElementById("foodDescription").textContent =
+        food.description;
+
+      const tagArea = document.getElementById("foodTags");
+      tagArea.replaceChildren();
+
+      food.tags.forEach(tag => {
+        const span = document.createElement("span");
+        span.textContent = tag;
+        tagArea.appendChild(span);
+      });
+
+      message.textContent = "";
+      result.style.display = "block";
+      result.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+
+    document.getElementById("recommendBtn")
+      .addEventListener("click", recommendFood);
+
+    document.getElementById("againBtn")
+      .addEventListener("click", recommendFood);
+  </script>
+</body>
+</html>
